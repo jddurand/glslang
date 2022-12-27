@@ -31,19 +31,27 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-find_host_package(PythonInterp 3 REQUIRED)
-
 set(GLSLANG_INTRINSIC_H          "${GLSLANG_GENERATED_INCLUDEDIR}/glslang/glsl_intrinsic_header.h")
-set(GLSLANG_INTRINSIC_PY         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.py")
 set(GLSLANG_INTRINSIC_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../glslang/ExtensionHeaders")
 
-add_custom_command(
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
+  set(GLSLANG_INTRINSIC_CMAKE         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.cmake")
+  add_custom_command(
+    OUTPUT  ${GLSLANG_INTRINSIC_H}
+    COMMAND ${CMAKE_COMMAND} -DGLSLANG_INTRINSIC_HEADER_DIR=${GLSLANG_INTRINSIC_HEADER_DIR} -DGLSLANG_INTRINSIC_H=${GLSLANG_INTRINSIC_H} -P ${GLSLANG_INTRINSIC_CMAKE}
+    DEPENDS ${GLSLANG_INTRINSIC_CMAKE}
+    COMMENT "Generating ${GLSLANG_INTRINSIC_H}")
+else()
+  find_host_package(PythonInterp 3 REQUIRED)
+  set(GLSLANG_INTRINSIC_PY         "${CMAKE_CURRENT_SOURCE_DIR}/../gen_extension_headers.py")
+  add_custom_command(
     OUTPUT  ${GLSLANG_INTRINSIC_H}
     COMMAND ${PYTHON_EXECUTABLE} "${GLSLANG_INTRINSIC_PY}"
             "-i" ${GLSLANG_INTRINSIC_HEADER_DIR}
             "-o" ${GLSLANG_INTRINSIC_H}
     DEPENDS ${GLSLANG_INTRINSIC_PY}
     COMMENT "Generating ${GLSLANG_INTRINSIC_H}")
+endif()
 
 #add_custom_target(glslangValidator DEPENDS ${GLSLANG_INTRINSIC_H})
 
